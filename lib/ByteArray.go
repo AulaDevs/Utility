@@ -48,6 +48,12 @@ func (bt *ByteArray) Write_Int(value int) *ByteArray {
 	return bt
 }
 
+func (bt *ByteArray) Write_String(value string) *ByteArray {
+	bt.Write_Short(uint16(len(value)))
+	bt.Bytes.Write([]byte(value))
+	return bt
+}
+
 // Read methods
 func (bt *ByteArray) Read_Byte() byte {
 	value, err := bt.Bytes.ReadByte()
@@ -69,4 +75,10 @@ func (bt *ByteArray) Read_Int() int {
 	data := make([]byte, 4)
 	bt.Bytes.Read(data)
 	return int(binary.BigEndian.Uint32(data))
+}
+
+func (bt *ByteArray) Read_String() string {
+	data := make([]byte, bt.Read_Short())
+	bt.Bytes.Read(data)
+	return string(data)
 }
