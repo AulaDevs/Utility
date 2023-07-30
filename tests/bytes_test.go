@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"bytes"
+	crand "crypto/rand"
 	"math/rand"
 	"testing"
 	"time"
@@ -124,6 +126,31 @@ func TestByteArrayBool(t *testing.T) {
 
 	if boolRead != randomBool {
 		t.Fatalf("The boolean read was expected to be %v but got %v.", randomBool, boolRead)
+	}
+
+	if byteArray.Len() > 0 {
+		t.Fatalf("It was expected that after reading the written bytes the buffer would be empty, but there are still %d bytes in the buffer. Bytes: %v", byteArray.Len(), byteArray.Get_Bytes())
+	}
+}
+
+func TestByteArrayBytes(t *testing.T) {
+	randomBytes := make([]byte, rand.Intn(64))
+	randomSize, err := crand.Read(randomBytes)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	byteArray.Write_Bytes(randomBytes)
+
+	if byteArray.Len() != randomSize {
+		t.Fatalf("It was expected that after writing bytes the buffer size would be %d but it is %d. Bytes: %v", randomSize, byteArray.Len(), byteArray.Get_Bytes())
+	}
+
+	bytesRead := byteArray.Read_Bytes(randomSize)
+
+	if !bytes.Equal(bytesRead, randomBytes) {
+		t.Fatalf("The bytes read was expected to be %v but got %v.", randomBytes, bytesRead)
 	}
 
 	if byteArray.Len() > 0 {
