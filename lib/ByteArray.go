@@ -54,6 +54,15 @@ func (bt *ByteArray) Write_String(value string) *ByteArray {
 	return bt
 }
 
+func (bt *ByteArray) Write_Boolean(value bool) *ByteArray {
+	if value {
+		bt.Bytes.WriteByte(1)
+	} else {
+		bt.Bytes.WriteByte(0)
+	}
+	return bt
+}
+
 // Read methods
 func (bt *ByteArray) Read_Byte() byte {
 	value, err := bt.Bytes.ReadByte()
@@ -81,4 +90,8 @@ func (bt *ByteArray) Read_String() string {
 	data := make([]byte, bt.Read_Short())
 	bt.Bytes.Read(data)
 	return string(data)
+}
+
+func (bt *ByteArray) Read_Boolean() bool {
+	return bt.Read_Byte() == 1
 }

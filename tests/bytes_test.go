@@ -12,7 +12,7 @@ var byteArray *ByteArray = NewByteArrayEmpty()
 
 func TestByteArrayByte(t *testing.T) {
 	// Up to max byte value
-	randomByte := byte(rand.Intn(255))
+	randomByte := byte(rand.Intn(256))
 
 	byteArray.Write_Byte(randomByte)
 
@@ -33,7 +33,7 @@ func TestByteArrayByte(t *testing.T) {
 
 func TestByteArrayShort(t *testing.T) {
 	// Up to max short value
-	randomShort := uint16(rand.Intn(65535))
+	randomShort := uint16(rand.Intn(65536))
 
 	byteArray.Write_Short(randomShort)
 
@@ -54,7 +54,7 @@ func TestByteArrayShort(t *testing.T) {
 
 func TestByteArrayInt(t *testing.T) {
 	// Up to max int value
-	randomInt := rand.Intn(2147483647)
+	randomInt := rand.Intn(2147483648)
 
 	byteArray.Write_Int(randomInt)
 
@@ -89,7 +89,7 @@ func RandomString(length int) string {
 }
 
 func TestByteArrayString(t *testing.T) {
-	randomSize := rand.Intn(65535)
+	randomSize := rand.Intn(65536)
 	randomString := RandomString(randomSize)
 
 	fullSize := 2 + randomSize // short + string bytes
@@ -97,13 +97,33 @@ func TestByteArrayString(t *testing.T) {
 	byteArray.Write_String(randomString)
 
 	if byteArray.Len() != fullSize {
-		t.Fatalf("It was expected that after writing int the buffer size would be %d but it is %d. Bytes: %v", fullSize, byteArray.Len(), byteArray.Get_Bytes())
+		t.Fatalf("It was expected that after writing string the buffer size would be %d but it is %d. Bytes: %v", fullSize, byteArray.Len(), byteArray.Get_Bytes())
 	}
 
 	stringRead := byteArray.Read_String()
 
 	if stringRead != randomString {
 		t.Fatalf("The string read was expected to be %s but got %s.", randomString, stringRead)
+	}
+
+	if byteArray.Len() > 0 {
+		t.Fatalf("It was expected that after reading the written bytes the buffer would be empty, but there are still %d bytes in the buffer. Bytes: %v", byteArray.Len(), byteArray.Get_Bytes())
+	}
+}
+
+func TestByteArrayBool(t *testing.T) {
+	randomBool := rand.Intn(2) == 1
+
+	byteArray.Write_Boolean(randomBool)
+
+	if byteArray.Len() != 1 {
+		t.Fatalf("It was expected that after writing boolean the buffer size would be 1 but it is %d. Bytes: %v", byteArray.Len(), byteArray.Get_Bytes())
+	}
+
+	boolRead := byteArray.Read_Boolean()
+
+	if boolRead != randomBool {
+		t.Fatalf("The boolean read was expected to be %v but got %v.", randomBool, boolRead)
 	}
 
 	if byteArray.Len() > 0 {
