@@ -6,16 +6,20 @@ import (
 	. "github.com/AulaDevs/Utility/lib"
 )
 
-var handler *EventHandler = NewEventHandler()
-
 func TestEventHandler(t *testing.T) {
 	canExit := make(chan bool)
+	canProceed := make(chan bool)
+
+	var handler *EventHandler = NewEventHandler()
 
 	go func() {
+		canProceed <- true
 		args := handler.ListenAndWait("test")
 		t.Logf("Event 'test' called with args: %v", args)
 		canExit <- true
 	}()
+
+	<-canProceed
 
 	t.Log("Running 'test' Emitter")
 	handler.Emit("test", Event{3, "Lucas"})

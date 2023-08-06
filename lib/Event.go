@@ -60,7 +60,9 @@ func (eventHandler *EventHandler) Emit(name string, data Event) {
 	}
 
 	for index, listener := range eventHandler.listeners[name] {
-		listener.callback(data)
+		go func() {
+			listener.callback(data)
+		}()
 
 		if listener.once {
 			eventHandler.listeners[name] = sliceutils.Remove(eventHandler.listeners[name], index)

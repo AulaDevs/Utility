@@ -14,51 +14,47 @@ type NetworkSocket struct {
 
 // Constructors
 func NetworkSocketFrom(conn *net.TCPConn) *NetworkSocket {
-	socket := &NetworkSocket{conn, NewEventHandler(), false}
-	go socket.pollData()
-	return socket
+	return &NetworkSocket{conn, NewEventHandler(), false}
 }
 
 func NetworkSocketConnect(host string, port int) (*NetworkSocket, error) {
-
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return nil, err
 	}
 
-	socket := &NetworkSocket{conn.(*net.TCPConn), NewEventHandler(), false}
-	go socket.pollData()
-
-	return socket, nil
-}
-
-// Private methods
-func (socket *NetworkSocket) pollData() {
-	defer socket.Close()
-
-	for !socket.closed {
-		data := make([]byte, 2048)
-		bytesRead, err := socket.conn.Read(data)
-
-		if socket.closed {
-			return
-		}
-
-		if err != nil {
-			socket.Events.Emit("Error", Event{"DataReceived", err})
-			return
-		}
-
-		if bytesRead != 0 {
-			buffer := bytes.NewBuffer(make([]byte, 0, bytesRead))
-			buffer.Write(data[:bytesRead])
-
-			socket.Events.Emit("DataReceived", Event{buffer})
-		}
-	}
+	return &NetworkSocket{conn.(*net.TCPConn), NewEventHandler(), false}, nil
 }
 
 // Standard methods
+
+func (socket *NetworkSocket) Poll() {
+	go func() {
+		defer socket.Close()
+
+		for !socket.closed {
+			data := make([]byte, 2048)
+			bytesRead, err := socket.conn.Read(data)
+
+			if socket.closed {
+				return
+			}
+
+			if err != nil {
+				socket.Events.Emit("Error", Event{"DataReceived", err})
+				return
+			}
+
+			if bytesRead != 0 {
+				buffer := bytes.NewBuffer(make([]byte, 0, bytesRead))
+				buffer.Write(data[:bytesRead])
+
+				socket.Events.Emit("DataReceived", Event{buffer})
+			}
+		}
+	}()
+}
+
 func (socket *NetworkSocket) Close() {
 	socket.closed = true
 	socket.conn.Close()

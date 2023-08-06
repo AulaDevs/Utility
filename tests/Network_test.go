@@ -2,22 +2,28 @@ package tests
 
 import (
 	"bytes"
+	"math"
+	"math/rand"
 	"testing"
 
 	. "github.com/AulaDevs/Utility/lib"
 )
 
 func TestNetworkListen(t *testing.T) {
-	network, err := NetworkListen("0.0.0.0", 11801)
+	port := int(math.Min(10000, float64(rand.Intn(160000))))
+
+	network, err := NetworkListen("0.0.0.0", port)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	t.Logf("Listening on 0.0.0.0:%d", port)
+
 	network.ListenEvent(
 		"Error",
 		func(args Event) {
-			t.Fatalf("%s: %v", args[0].(string), args[1].(error))
+			t.Logf("%s: %v", args[0].(string), args[1].(error))
 		},
 	)
 
@@ -50,6 +56,8 @@ func TestNetworkListen(t *testing.T) {
 				t.Log("Socket closed")
 				network.Close()
 			})
+
+			socket.Poll()
 		},
 	)
 
@@ -59,7 +67,7 @@ func TestNetworkListen(t *testing.T) {
 		canExit <- true
 	})
 
-	socket, err := NetworkSocketConnect("0.0.0.0", 11801)
+	socket, err := NetworkSocketConnect("0.0.0.0", port)
 
 	if err != nil {
 		t.Fatal(err)

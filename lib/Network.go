@@ -42,6 +42,7 @@ func NetworkListen(host string, port int) (*Network, error) {
 
 func (network *Network) Close() {
 	network.closed = true
+	network.socket.Close()
 	network.Events.Emit("Closed", Event{})
 	network.Events.RemoveAllEventListeners()
 }
