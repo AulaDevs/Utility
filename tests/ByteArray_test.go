@@ -10,11 +10,22 @@ import (
 	. "github.com/AulaDevs/Utility/lib"
 )
 
+var rng *rand.Rand
 var byteArray *ByteArray = NewByteArrayEmpty()
 
+func CheckCreateRandomSeed(t *testing.T) {
+	if rng == nil {
+		var seed = rand.Int63n(time.Now().UnixNano()) // need to randomize it
+		rng = rand.New(rand.NewSource(seed))
+		t.Logf("Using seed %d", seed)
+	}
+}
+
 func TestByteArrayByte(t *testing.T) {
+	CheckCreateRandomSeed(t)
+
 	// Up to max byte value
-	randomByte := byte(rand.Intn(256))
+	randomByte := byte(rng.Intn(256))
 
 	byteArray.Write_Byte(randomByte)
 
@@ -34,8 +45,10 @@ func TestByteArrayByte(t *testing.T) {
 }
 
 func TestByteArrayShort(t *testing.T) {
+	CheckCreateRandomSeed(t)
+
 	// Up to max short value
-	randomShort := uint16(rand.Intn(65536))
+	randomShort := uint16(rng.Intn(65536))
 
 	byteArray.Write_Short(randomShort)
 
@@ -55,8 +68,10 @@ func TestByteArrayShort(t *testing.T) {
 }
 
 func TestByteArrayInt(t *testing.T) {
+	CheckCreateRandomSeed(t)
+
 	// Up to max int value
-	randomInt := rand.Intn(2147483648)
+	randomInt := rng.Intn(2147483648)
 
 	byteArray.Write_Int(randomInt)
 
@@ -75,23 +90,45 @@ func TestByteArrayInt(t *testing.T) {
 	}
 }
 
+func TestByteArrayInt48(t *testing.T) {
+	CheckCreateRandomSeed(t)
+
+	// Up to max int64 value
+	randomDynamicInt := rng.Int63n(281474976710655)
+
+	byteArray.Write_Int48(randomDynamicInt)
+
+	t.Logf("Wrote number %d, bytes: %v", randomDynamicInt, byteArray.Get_Bytes())
+
+	integerRead := byteArray.Read_Int48()
+
+	if integerRead != randomDynamicInt {
+		t.Fatalf("The dynamic int read was expected to be %d but got %d.", randomDynamicInt, integerRead)
+	}
+
+	if byteArray.Len() > 0 {
+		t.Fatalf("It was expected that after reading the written bytes the buffer would be empty, but there are still %d bytes in the buffer. Bytes: %v", byteArray.Len(), byteArray.Get_Bytes())
+	}
+
+	byteArray.Clear()
+}
+
 // For testing string purposes
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-var seededRand *rand.Rand = rand.New(
-	rand.NewSource(time.Now().UnixNano()))
-
 func RandomString(length int) string {
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
+		b[i] = charset[rng.Intn(len(charset))]
 	}
 	return string(b)
 }
 
 func TestByteArrayString(t *testing.T) {
-	randomSize := rand.Intn(65536)
+	CheckCreateRandomSeed(t)
+
+	randomSize := rng.Intn(65536)
 	randomString := RandomString(randomSize)
 
 	fullSize := 2 + randomSize // short + string bytes
@@ -114,7 +151,9 @@ func TestByteArrayString(t *testing.T) {
 }
 
 func TestByteArrayBool(t *testing.T) {
-	randomBool := rand.Intn(2) == 1
+	CheckCreateRandomSeed(t)
+
+	randomBool := rng.Intn(2) == 1
 
 	byteArray.Write_Boolean(randomBool)
 
@@ -134,7 +173,9 @@ func TestByteArrayBool(t *testing.T) {
 }
 
 func TestByteArrayBytes(t *testing.T) {
-	randomBytes := make([]byte, rand.Intn(64))
+	CheckCreateRandomSeed(t)
+
+	randomBytes := make([]byte, rng.Intn(64))
 	randomSize, err := crand.Read(randomBytes)
 
 	if err != nil {
