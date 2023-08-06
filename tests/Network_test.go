@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
-	. "github.com/AulaDevs/Utility/lib"
+	. "github.com/AulaDevs/Utility"
 )
 
 func TestNetworkListen(t *testing.T) {

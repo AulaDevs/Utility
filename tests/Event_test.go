@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	. "github.com/AulaDevs/Utility/lib"
+	. "github.com/AulaDevs/Utility"
 )
 
 func TestEventHandler(t *testing.T) {

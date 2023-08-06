@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/AulaDevs/Utility/lib"
+	. "github.com/AulaDevs/Utility"
 )
 
 var rng *rand.Rand
