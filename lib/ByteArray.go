@@ -1,4 +1,4 @@
-package ByteArray
+package lib
 
 import (
 	"bytes"
@@ -48,6 +48,25 @@ func (bt *ByteArray) Write_Int(value int) *ByteArray {
 	return bt
 }
 
+func (bt *ByteArray) Write_Int48(value int64) *ByteArray {
+	length := value >> 7
+
+	if length == 0 {
+		bt.Bytes.Write([]byte{byte(((value & 127) | 128))})
+		bt.Bytes.Write([]byte{byte(0)})
+		return bt
+	}
+
+	for length != 0 {
+		bt.Bytes.Write([]byte{byte(((value & 127) | 128))})
+		value = length
+		length = length >> 7
+	}
+
+	bt.Bytes.Write([]byte{byte(value & 127)})
+	return bt
+}
+
 func (bt *ByteArray) Write_String(value string) *ByteArray {
 	bt.Write_Short(uint16(len(value)))
 	bt.Bytes.Write([]byte(value))
@@ -89,6 +108,29 @@ func (bt *ByteArray) Read_Int() int {
 	data := make([]byte, 4)
 	bt.Bytes.Read(data)
 	return int(binary.BigEndian.Uint32(data))
+}
+
+func (bt *ByteArray) Read_Int48() int64 {
+	var local1 int64 = 0
+	var local3 int64 = 0
+	var local4 int64 = -1
+
+	for {
+		var local2 int64 = int64(bt.Read_Byte())
+		local1 = (local1 | ((local2 & 127) << (local3 * 7)))
+		local4 = (local4 << 7)
+		local3 += 1
+
+		if (local2 & 128) != 128 {
+			break
+		}
+	}
+
+	if ((local4 >> 1) & local1) != 0 {
+		local1 = (local1 | (local4))
+	}
+
+	return local1
 }
 
 func (bt *ByteArray) Read_String() string {
