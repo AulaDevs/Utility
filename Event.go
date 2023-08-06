@@ -1,4 +1,4 @@
-package lib
+package Utility
 
 import "github.com/Goldziher/go-utils/sliceutils"
 
