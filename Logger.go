@@ -49,7 +49,7 @@ func (logger *Logger) write(level loggerLevel, name string, format string, a ...
 	message := fmt.Sprintf("[%s] %s: %s\n", name, time.Now().UTC().String(), fmt.Sprintf(format, a...))
 
 	if logger.console {
-		fmt.Println(message)
+		fmt.Print(message)
 	}
 
 	logger.file.WriteString(message)
