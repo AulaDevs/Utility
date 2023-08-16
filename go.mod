@@ -1,6 +1,6 @@
 module github.com/AulaDevs/Utility
 
-go 1.20
+go 1.21
 
 require github.com/Goldziher/go-utils v1.7.3
 

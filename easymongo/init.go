@@ -8,9 +8,10 @@ import (
 )
 
 type MongoClient struct {
-	Client   *mongo.Client
-	Context  context.Context
-	Database *mongo.Database
+	Client            *mongo.Client
+	Context           context.Context
+	Database          *mongo.Database
+	LoadedCollections map[string]*CollectionCursor
 }
 
 // Constructor
@@ -32,17 +33,35 @@ func Connect(options *options.ClientOptions, database string) (*MongoClient, err
 		client,
 		ctx,
 		client.Database(database),
+		map[string]*CollectionCursor{},
 	}, nil
 }
 
 // Standard methods
 func (client *MongoClient) Collection(name string, opts ...*options.CollectionOptions) *CollectionCursor {
-	return &CollectionCursor{
+	if cursor, ok := client.LoadedCollections[name]; ok {
+		return cursor
+	}
+
+	client.LoadedCollections[name] = &CollectionCursor{
 		client.Context,
 		client.Database.Collection(name, opts...),
 	}
+
+	return client.LoadedCollections[name]
+}
+
+func (client *MongoClient) UnloadCollection(name string) bool {
+	_, ok := client.LoadedCollections[name]
+
+	if ok {
+		delete(client.LoadedCollections, name)
+	}
+
+	return ok
 }
 
 func (client *MongoClient) Disconnect() error {
+	clear(client.LoadedCollections)
 	return client.Client.Disconnect(client.Context)
 }
