@@ -6,7 +6,8 @@ import (
 	"math/rand"
 	"testing"
 
-	. "github.com/AulaDevs/Utility"
+	"github.com/AulaDevs/Utility/event"
+	. "github.com/AulaDevs/Utility/net"
 )
 
 func TestNetworkListen(t *testing.T) {
@@ -22,28 +23,28 @@ func TestNetworkListen(t *testing.T) {
 
 	network.ListenEvent(
 		"Error",
-		func(args Event) {
+		func(args event.Args) {
 			t.Logf("%s: %v", args[0].(string), args[1].(error))
 		},
 	)
 
 	network.ListenEvent(
 		"NewClient",
-		func(args Event) {
+		func(args event.Args) {
 			socket := args[0].(*NetworkSocket)
 
 			t.Logf("NewClient %s", socket.RemoteAddress().String())
 
 			socket.ListenEvent(
 				"Error",
-				func(args Event) {
+				func(args event.Args) {
 					t.Fatalf("%s: %v", args[0].(string), args[1].(error))
 				},
 			)
 
 			socket.ListenEvent(
 				"DataReceived",
-				func(args Event) {
+				func(args event.Args) {
 					buffer := args[0].(*bytes.Buffer)
 
 					t.Logf("Received bytes: %v", buffer.Bytes())
@@ -52,7 +53,7 @@ func TestNetworkListen(t *testing.T) {
 				},
 			)
 
-			socket.ListenEvent("Closed", func(_ Event) {
+			socket.ListenEvent("Closed", func(_ event.Args) {
 				t.Log("Socket closed")
 				network.Close()
 			})
@@ -62,7 +63,7 @@ func TestNetworkListen(t *testing.T) {
 	)
 
 	canExit := make(chan bool)
-	network.ListenEvent("Closed", func(_ Event) {
+	network.ListenEvent("Closed", func(_ event.Args) {
 		t.Log("Network closed")
 		canExit <- true
 	})

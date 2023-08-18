@@ -1,12 +1,12 @@
-package Utility
+package event
 
 import "github.com/Goldziher/go-utils/sliceutils"
 
-type Event []interface{}
+type Args []interface{}
 
 type EventListener struct {
 	once     bool
-	callback func(Event)
+	callback func(Args)
 }
 
 type EventHandler struct {
@@ -21,7 +21,7 @@ func NewEventHandler() *EventHandler {
 }
 
 // Standard methods
-func (eventHandler *EventHandler) ListenOnce(name string, callback func(Event)) {
+func (eventHandler *EventHandler) ListenOnce(name string, callback func(Args)) {
 	eventHandler.listeners[name] = append(
 		eventHandler.listeners[name],
 		&EventListener{
@@ -31,7 +31,7 @@ func (eventHandler *EventHandler) ListenOnce(name string, callback func(Event)) 
 	)
 }
 
-func (eventHandler *EventHandler) Listen(name string, callback func(Event)) {
+func (eventHandler *EventHandler) Listen(name string, callback func(Args)) {
 	eventHandler.listeners[name] = append(
 		eventHandler.listeners[name],
 		&EventListener{
@@ -41,12 +41,12 @@ func (eventHandler *EventHandler) Listen(name string, callback func(Event)) {
 	)
 }
 
-func (eventHandler *EventHandler) ListenAndWait(name string) Event {
-	channel := make(chan Event)
+func (eventHandler *EventHandler) ListenAndWait(name string) Args {
+	channel := make(chan Args)
 
 	eventHandler.ListenOnce(
 		name,
-		func(args Event) {
+		func(args Args) {
 			channel <- args
 		},
 	)
@@ -54,7 +54,7 @@ func (eventHandler *EventHandler) ListenAndWait(name string) Event {
 	return <-channel
 }
 
-func (eventHandler *EventHandler) Emit(name string, data Event) {
+func (eventHandler *EventHandler) Emit(name string, data Args) {
 	if len(eventHandler.listeners[name]) == 0 {
 		return
 	}

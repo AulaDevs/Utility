@@ -1,4 +1,4 @@
-package Utility
+package option
 
 type Option[T any] struct {
 	value  T
@@ -22,5 +22,13 @@ func (option Option[T]) IsNone() bool {
 }
 
 func (option Option[T]) Unwrap() T {
+	return option.value
+}
+
+func (option Option[T]) UnwrapOr(callback func() T) T {
+	if option.isNone {
+		return callback()
+	}
+
 	return option.value
 }
