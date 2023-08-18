@@ -1,20 +1,22 @@
-package Utility
+package net
 
 import (
 	"bytes"
 	"fmt"
 	"net"
+
+	"github.com/AulaDevs/Utility/event"
 )
 
 type NetworkSocket struct {
 	conn   *net.TCPConn
-	Events *EventHandler
+	Events *event.EventHandler
 	closed bool
 }
 
 // Constructors
 func NetworkSocketFrom(conn *net.TCPConn) *NetworkSocket {
-	return &NetworkSocket{conn, NewEventHandler(), false}
+	return &NetworkSocket{conn, event.NewEventHandler(), false}
 }
 
 func NetworkSocketConnect(host string, port int) (*NetworkSocket, error) {
@@ -23,7 +25,7 @@ func NetworkSocketConnect(host string, port int) (*NetworkSocket, error) {
 		return nil, err
 	}
 
-	return &NetworkSocket{conn.(*net.TCPConn), NewEventHandler(), false}, nil
+	return &NetworkSocket{conn.(*net.TCPConn), event.NewEventHandler(), false}, nil
 }
 
 // Standard methods
@@ -41,7 +43,7 @@ func (socket *NetworkSocket) Poll() {
 			}
 
 			if err != nil {
-				socket.Events.Emit("Error", Event{"DataReceived", err})
+				socket.Events.Emit("Error", event.Args{"DataReceived", err})
 				return
 			}
 
@@ -49,7 +51,7 @@ func (socket *NetworkSocket) Poll() {
 				buffer := bytes.NewBuffer(make([]byte, 0, bytesRead))
 				buffer.Write(data[:bytesRead])
 
-				socket.Events.Emit("DataReceived", Event{buffer})
+				socket.Events.Emit("DataReceived", event.Args{buffer})
 			}
 		}
 	}()
@@ -58,7 +60,7 @@ func (socket *NetworkSocket) Poll() {
 func (socket *NetworkSocket) Close() {
 	socket.closed = true
 	socket.conn.Close()
-	socket.Events.Emit("Closed", Event{})
+	socket.Events.Emit("Closed", event.Args{})
 	socket.Events.RemoveAllEventListeners()
 }
 
@@ -79,10 +81,10 @@ func (socket *NetworkSocket) LocalAddress() net.Addr {
 }
 
 // Event methods
-func (socket *NetworkSocket) ListenEvent(name string, callback func(Event)) {
+func (socket *NetworkSocket) ListenEvent(name string, callback func(event.Args)) {
 	socket.Events.Listen(name, callback)
 }
 
-func (socket *NetworkSocket) ListenEventOnce(name string, callback func(Event)) {
+func (socket *NetworkSocket) ListenEventOnce(name string, callback func(event.Args)) {
 	socket.Events.ListenOnce(name, callback)
 }

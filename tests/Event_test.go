@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	. "github.com/AulaDevs/Utility"
+	. "github.com/AulaDevs/Utility/event"
 )
 
 func TestEventHandler(t *testing.T) {
@@ -22,7 +22,7 @@ func TestEventHandler(t *testing.T) {
 	<-canProceed
 
 	t.Log("Running 'test' Emitter")
-	handler.Emit("test", Event{3, "Lucas"})
+	handler.Emit("test", Args{3, "Lucas"})
 
 	<-canExit
 

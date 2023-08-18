@@ -3,19 +3,16 @@ package tests
 import (
 	"testing"
 
-	"github.com/AulaDevs/Utility"
+	"github.com/AulaDevs/Utility/option"
 )
 
 func TestOptions(t *testing.T) {
-	test := func(value Utility.Option[string]) {
-		t.Logf("The value is none? %v", value.IsNone())
-		t.Logf("The value is some? %v", value.IsSome())
-
-		if value.IsSome() {
-			t.Logf("The value is %s", value.Unwrap())
-		}
+	test := func(value option.Option[string]) {
+		t.Logf("Is the value none? %v", value.IsNone())
+		t.Logf("Is the value some? %v", value.IsSome())
+		t.Logf("Unwrap value: %s", value.UnwrapOr(func() string { return "none" }))
 	}
 
-	test(Utility.None[string]())
-	test(Utility.Some("Hello world"))
+	test(option.None[string]())
+	test(option.Some("Hello world"))
 }
