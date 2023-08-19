@@ -2,85 +2,66 @@ package tests
 
 import (
 	"bytes"
-	"math"
-	"math/rand"
 	"testing"
 
-	"github.com/AulaDevs/Utility/event"
-	. "github.com/AulaDevs/Utility/net"
+	"github.com/AulaDevs/Utility/net"
 )
 
+func handleClient(t *testing.T, socket *net.Socket, network *net.Listener) {
+	t.Logf("New socket from: %s", socket.RemoteAddress())
+	for !socket.IsClosed() {
+		response := socket.Refresh()
+
+		switch response.Type {
+		case net.NET_CLOSED:
+			t.Log("Socket closed")
+			network.Close()
+		case net.NET_ERR:
+			t.Logf("Error: %v", response.Data[0].(error))
+		case net.NET_DATA:
+			t.Logf("Received bytes: %v", response.Data[0].(*bytes.Buffer).String())
+		case net.NET_SKIP:
+			continue
+		}
+	}
+}
+
 func TestNetworkListen(t *testing.T) {
-	port := int(math.Min(10000, float64(rand.Intn(160000))))
-
-	network, err := NetworkListen("0.0.0.0", port)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("Listening on 0.0.0.0:%d", port)
-
-	network.ListenEvent(
-		"Error",
-		func(args event.Args) {
-			t.Logf("%s: %v", args[0].(string), args[1].(error))
-		},
-	)
-
-	network.ListenEvent(
-		"NewClient",
-		func(args event.Args) {
-			socket := args[0].(*NetworkSocket)
-
-			t.Logf("NewClient %s", socket.RemoteAddress().String())
-
-			socket.ListenEvent(
-				"Error",
-				func(args event.Args) {
-					t.Fatalf("%s: %v", args[0].(string), args[1].(error))
-				},
-			)
-
-			socket.ListenEvent(
-				"DataReceived",
-				func(args event.Args) {
-					buffer := args[0].(*bytes.Buffer)
-
-					t.Logf("Received bytes: %v", buffer.Bytes())
-
-					socket.Close()
-				},
-			)
-
-			socket.ListenEvent("Closed", func(_ event.Args) {
-				t.Log("Socket closed")
-				network.Close()
-			})
-
-			socket.Poll()
-		},
-	)
-
 	canExit := make(chan bool)
-	network.ListenEvent("Closed", func(_ event.Args) {
-		t.Log("Network closed")
+
+	network, err := net.Listen("0.0.0.0", 11801)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		for !network.IsClosed() {
+			response := network.Refresh()
+
+			switch response.Type {
+			case net.NET_CLOSED:
+				t.Log("Network closed")
+			case net.NET_CONN:
+				go handleClient(t, response.Data[0].(*net.Socket), network)
+			case net.NET_ERR:
+				t.Logf("Error: %v", response.Data[0].(error))
+			case net.NET_SKIP:
+				continue
+			}
+		}
+
 		canExit <- true
-	})
+	}()
 
-	socket, err := NetworkSocketConnect("0.0.0.0", port)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sent, err := socket.Write(bytes.NewBufferString("Hello world"))
+	client, err := net.Connect("0.0.0.0", 11801)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("Socket sent %d bytes to the network socket", sent)
+	client.Write(bytes.NewBufferString("Hello world"))
+	client.Close()
 
 	<-canExit
 }
